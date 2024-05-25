@@ -1,0 +1,111 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-image: url(https://images.unsplash.com/photo-1617147510149-7fbbd5def782?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    margin: 0;
+}
+
+.container {
+    font-size: 18px;
+    background-color: rgba(255, 182, 193, 0.664);
+    background-image: url();
+    background-size: cover;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px 0 yellow, 0 2px 20px 0 yellow, 0 4px 8px green;
+    width: 95%;
+    max-width: 1200px;
+    margin: 50px auto;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin: 10px 0 5px;
+}
+
+input, select, button {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+button {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #4cae4c;
+}
+
+#processInputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.process {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    width: calc(33% - 10px);
+    background-color: #f9f9f9;
+}
+
+.process:hover {
+    background-color: #e0f7fa;
+}
+
+#result {
+    font-size: 28px;
+    display: none;
+    margin-top: 20px;
+}
+
+#ganttChart {
+    margin-top: 20px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#ganttChart span {
+    display: inline-block;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border: 1px solid #000;
+    border-radius: 3px;
+    background-color: #ffeb3b;
+}
+
+#ganttChart span:hover {
+    transform: scale(1.1);
+}
+
+#averages {
+    margin-top: 20px;
+}
+
+#result h2{
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 40px;
+}
