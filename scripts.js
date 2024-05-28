@@ -65,8 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return processes;
     }
 
-    function scheduleProcesses(processes,algorithm, quantum) {
-        // Placeholder function for scheduling
+    function scheduleProcesses(processes, algorithm, quantum) {
         let ganttChart = [];
         let avgTurnaroundTime = 0;
         let avgWaitingTime = 0;
@@ -104,79 +103,184 @@ document.addEventListener('DOMContentLoaded', () => {
         resultDiv.style.display = 'block';
     }
 
-    // Placeholder scheduling algorithm implementations
     function fcfs(processes) {
         processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
         let time = 0;
         let ganttChart = [];
         let totalTurnaroundTime = 0;
         let totalWaitingTime = 0;
-
+    
         processes.forEach(process => {
             if (time < process.arrivalTime) {
+                ganttChart.push(`idle(${process.arrivalTime - time})`);
                 time = process.arrivalTime;
             }
-            let waitingTime = time - process.arrivalTime;
+            ganttChart.push(`P${process.id}(${process.burstTime})`);
             time += process.burstTime;
-            let turnaroundTime = time - process.arrivalTime;
-            ganttChart.push(`P${process.id}(${turnaroundTime})`);
-
-            totalTurnaroundTime += turnaroundTime;
-            totalWaitingTime += waitingTime;
+            let waitingTime = time - process.arrivalTime - process.burstTime;
+            totalTurnaroundTime += time - process.arrivalTime;
+            totalWaitingTime += waitingTime >= 0 ? waitingTime : 0;
         });
-
+    
         return {
             ganttChart,
             avgTurnaroundTime: totalTurnaroundTime / processes.length,
             avgWaitingTime: totalWaitingTime / processes.length
         };
     }
+        
 
     function sjf(processes) {
-        processes.sort((a, b) => a.burstTime - b.burstTime);
         let time = 0;
         let ganttChart = [];
         let totalTurnaroundTime = 0;
         let totalWaitingTime = 0;
-
-        processes.forEach(process => {
-            if (time < process.arrivalTime) {
-                time = process.arrivalTime;
+        let completedProcesses = 0;
+        let n = processes.length;
+        let isCompleted = new Array(n).fill(false);
+    
+        while (completedProcesses < n) {
+            let idx = -1;
+            let minBurstTime = Infinity;
+    
+            for (let i = 0; i < n; i++) {
+                if (processes[i].arrivalTime <= time && !isCompleted[i] && processes[i].burstTime < minBurstTime) {
+                    minBurstTime = processes[i].burstTime;
+                    idx = i;
+                }
             }
-            let waitingTime = time - process.arrivalTime;
-            time += process.burstTime;
-            let turnaroundTime = time - process.arrivalTime;
-            ganttChart.push(`P${process.id}(${turnaroundTime})`);
-
-            totalTurnaroundTime += turnaroundTime;
-            totalWaitingTime += waitingTime;
-        });
-
+    
+            if (idx !== -1) {
+                ganttChart.push(`P${processes[idx].id}`);
+                time += processes[idx].burstTime;
+                let turnaroundTime = time - processes[idx].arrivalTime;
+                let waitingTime = turnaroundTime - processes[idx].burstTime;
+    
+                totalTurnaroundTime += turnaroundTime;
+                totalWaitingTime += waitingTime;
+    
+                isCompleted[idx] = true;
+                completedProcesses++;
+            } else {
+                time++;
+            }
+        }
+    
         return {
             ganttChart,
-            avgTurnaroundTime: totalTurnaroundTime / processes.length,
-            avgWaitingTime: totalWaitingTime / processes.length
+            avgTurnaroundTime: totalTurnaroundTime / n,
+            avgWaitingTime: totalWaitingTime / n
         };
     }
-
+    
     function srtf(processes) {
-        // Placeholder implementation for SRTF
-        return { ganttChart: [], avgTurnaroundTime: 0, avgWaitingTime: 0 };
+        let time = 0;
+        let ganttChart = [];
+        let totalTurnaroundTime = 0;
+        let totalWaitingTime = 0;
+        let n = processes.length;
+        let remainingBurstTime = processes.map(p => p.burstTime);
+        let isCompleted = new Array(n).fill(false);
+        let completedProcesses = 0;
+    
+        while (completedProcesses < n) {
+            let idx = -1;
+            let minRemainingTime = Infinity;
+    
+            for (let i = 0; i < n; i++) {
+                if (processes[i].arrivalTime <= time && !isCompleted[i] && remainingBurstTime[i] < minRemainingTime) {
+                    minRemainingTime = remainingBurstTime[i];
+                    idx = i;
+                }
+            }
+    
+            if (idx !== -1) {
+                if (ganttChart.length === 0 || ganttChart[ganttChart.length - 1] !== `P${processes[idx].id}`) {
+                    ganttChart.push(`P${processes[idx].id}`);
+                }
+                remainingBurstTime[idx]--;
+                time++;
+    
+                if (remainingBurstTime[idx] === 0) {
+                    isCompleted[idx] = true;
+                    completedProcesses++;
+                    let turnaroundTime = time - processes[idx].arrivalTime;
+                    let waitingTime = turnaroundTime - processes[idx].burstTime;
+    
+                    totalTurnaroundTime += turnaroundTime;
+                    totalWaitingTime += waitingTime;
+                }
+            } else {
+                ganttChart.push(`idle`);
+                time++;
+            }
+        }
+    
+        return {
+            ganttChart,
+            avgTurnaroundTime: totalTurnaroundTime / n,
+            avgWaitingTime: totalWaitingTime / n
+        };
     }
-
+    
     function roundRobin(processes, quantum) {
-        // Placeholder implementation for Round Robin
-        return { ganttChart: [], avgTurnaroundTime: 0, avgWaitingTime: 0 };
+        let time = 0;
+        let ganttChart = [];
+        let totalTurnaroundTime = 0;
+        let totalWaitingTime = 0;
+        let n = processes.length;
+        let remainingBurstTime = processes.map(p => p.burstTime);
+        let completedProcesses = 0;
+        let queue = [];
+        let arrivalIndex = 0;
+    
+        while (completedProcesses < n) {
+            while (arrivalIndex < n && processes[arrivalIndex].arrivalTime <= time) {
+                queue.push(arrivalIndex);
+                arrivalIndex++;
+            }
+    
+            if (queue.length > 0) {
+                let idx = queue.shift();
+    
+                ganttChart.push(`P${processes[idx].id}`);
+                let executionTime = Math.min(quantum, remainingBurstTime[idx]);
+                time += executionTime;
+                remainingBurstTime[idx] -= executionTime;
+    
+                if (remainingBurstTime[idx] === 0) {
+                    completedProcesses++;
+                    let turnaroundTime = time - processes[idx].arrivalTime;
+                    let waitingTime = turnaroundTime - processes[idx].burstTime;
+    
+                    totalTurnaroundTime += turnaroundTime;
+                    totalWaitingTime += waitingTime;
+                } else {
+                    while (arrivalIndex < n && processes[arrivalIndex].arrivalTime <= time) {
+                        queue.push(arrivalIndex);
+                        arrivalIndex++;
+                    }
+                    queue.push(idx);
+                }
+            } else {
+                time++;
+            }
+        }
+    
+        return {
+            ganttChart,
+            avgTurnaroundTime: totalTurnaroundTime / n,
+            avgWaitingTime: totalWaitingTime / n
+        };
     }
 
     function priorityNonPreemptive(processes) {
-        processes.sort((a, b) => a.priority - b.priority || a.arrivalTime - b.arrivalTime);
+        processes.sort((a, b) => a.arrivalTime - b.arrivalTime || a.priority - b.priority);
         let time = 0;
         let ganttChart = [];
         let totalTurnaroundTime = 0;
-       
         let totalWaitingTime = 0;
-
+    
         processes.forEach(process => {
             if (time < process.arrivalTime) {
                 time = process.arrivalTime;
@@ -185,20 +289,69 @@ document.addEventListener('DOMContentLoaded', () => {
             time += process.burstTime;
             let turnaroundTime = time - process.arrivalTime;
             ganttChart.push(`P${process.id}(${turnaroundTime})`);
-
+    
             totalTurnaroundTime += turnaroundTime;
             totalWaitingTime += waitingTime;
+    
+            // Adjust time for the next process
+            time = Math.max(time, process.arrivalTime + process.burstTime);
         });
-
+    
         return {
             ganttChart,
             avgTurnaroundTime: totalTurnaroundTime / processes.length,
             avgWaitingTime: totalWaitingTime / processes.length
         };
     }
+    
 
     function priorityPreemptive(processes) {
-        // Placeholder implementation for preemptive priority algorithm
-        return { ganttChart: [], avgTurnaroundTime: 0, avgWaitingTime: 0 };
+        let time = 0;
+        let ganttChart = [];
+        let totalTurnaroundTime = 0;
+        let totalWaitingTime = 0;
+        let n = processes.length;
+        let remainingBurstTime = processes.map(p => p.burstTime);
+        let isCompleted = new Array(n).fill(false);
+        let completedProcesses = 0;
+    
+        while (completedProcesses < n) {
+            let idx = -1;
+            let highestPriority = Infinity;
+    
+            for (let i = 0; i < n; i++) {
+                if (processes[i].arrivalTime <= time && !isCompleted[i] && processes[i].priority < highestPriority) {
+                    highestPriority = processes[i].priority;
+                    idx = i;
+                }
+            }
+    
+            if (idx !== -1) {
+                if (ganttChart.length === 0 || ganttChart[ganttChart.length - 1] !== `P${processes[idx].id}`) {
+                    ganttChart.push(`P${processes[idx].id}`);
+                }
+                time++;
+                remainingBurstTime[idx]--;
+    
+                if (remainingBurstTime[idx] === 0) {
+                    isCompleted[idx] = true;
+                    completedProcesses++;
+                    let turnaroundTime = time - processes[idx].arrivalTime;
+                    let waitingTime = turnaroundTime - processes[idx].burstTime;
+    
+                    totalTurnaroundTime += turnaroundTime;
+                    totalWaitingTime += waitingTime;
+                }
+            } else {
+                ganttChart.push(`idle`);
+                time++;
+            }
+        }
+    
+        return {
+            ganttChart,
+            avgTurnaroundTime: totalTurnaroundTime / n,
+            avgWaitingTime: totalWaitingTime / n
+        };
     }
 });
